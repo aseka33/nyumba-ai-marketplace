@@ -49,10 +49,12 @@ queryClient.getMutationCache().subscribe(event => {
   }
 });
 
+const API_URL = import.meta.env.VITE_API_URL || "https://decorai-api-production.up.railway.app";
+
 const trpcClient = trpc.createClient({
   links: [
     httpBatchLink({
-      url: import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/trpc` : "/api/trpc",
+      url: `${API_URL}/api/trpc`,
       transformer: superjson,
       fetch(input, init) {
         return globalThis.fetch(input, {
