@@ -36,6 +36,12 @@ NyumbaAI is an AI-powered interior design marketplace platform for the Kenyan ma
 - **Backend**: Railway
 - **Database**: Railway MySQL
 
+## Deployment
+
+- **Frontend**: Vercel
+- **Backend**: Railway
+- **Database**: Railway MySQL
+
 ## License
 
 MIT
