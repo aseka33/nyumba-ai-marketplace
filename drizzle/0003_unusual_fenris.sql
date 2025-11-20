@@ -1,0 +1,1 @@
+ALTER TABLE `videoAnalyses` ADD `productPlacements` text;

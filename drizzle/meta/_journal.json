@@ -1,0 +1,48 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1762968782141,
+      "tag": "0000_puzzling_gideon",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1762968852770,
+      "tag": "0001_great_misty_knight",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1762972325375,
+      "tag": "0002_fantastic_havok",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1762972359390,
+      "tag": "0003_unusual_fenris",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1763367816283,
+      "tag": "0004_sloppy_odin",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1763444760389,
+      "tag": "0005_brown_jocasta",
+      "breakpoints": true
+    }
+  ]
+}

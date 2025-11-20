@@ -1,0 +1,23 @@
+CREATE TABLE `vendorVisits` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`visitToken` varchar(255) NOT NULL,
+	`qrCodeUrl` text,
+	`customerId` int,
+	`customerEmail` varchar(255),
+	`customerPhone` varchar(50),
+	`productId` int NOT NULL,
+	`vendorId` int NOT NULL,
+	`scheduledDate` timestamp,
+	`scannedAt` timestamp,
+	`completedAt` timestamp,
+	`expiresAt` timestamp NOT NULL,
+	`status` enum('pending','scanned','completed','expired','cancelled') NOT NULL DEFAULT 'pending',
+	`orderId` int,
+	`commissionProtected` int NOT NULL DEFAULT 1,
+	`customerNotes` text,
+	`vendorNotes` text,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `vendorVisits_id` PRIMARY KEY(`id`),
+	CONSTRAINT `vendorVisits_visitToken_unique` UNIQUE(`visitToken`)
+);
