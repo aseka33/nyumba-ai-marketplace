@@ -1,5 +1,5 @@
 /**
- * Image Upload Component for DecorAI Marketplace
+ * Image Upload Component for NyumbaAI Marketplace
  * 
  * Features:
  * - Drag & drop support

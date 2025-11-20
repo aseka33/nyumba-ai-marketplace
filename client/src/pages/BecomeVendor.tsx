@@ -108,7 +108,7 @@ export default function BecomeVendor() {
               <Store className="w-4 h-4" />
               Vendor Registration
             </div>
-            <h1 className="text-4xl font-bold mb-4">Join DecorAI Marketplace</h1>
+            <h1 className="text-4xl font-bold mb-4">Join NyumbaAI Marketplace</h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Reach customers actively looking for interior products. No listing fees, only pay for premium positioning.
             </p>

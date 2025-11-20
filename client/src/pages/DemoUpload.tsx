@@ -151,7 +151,7 @@ export default function DemoUpload() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-gray-900">
-              DecorAI <span className="text-teal-600">Demo</span>
+              NyumbaAI <span className="text-teal-600">Demo</span>
             </h1>
             <div className="text-sm text-gray-500">
               Step 2 of 3 • Upload your room video

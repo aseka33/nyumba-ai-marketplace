@@ -110,7 +110,7 @@ export default function DemoPreferences() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles className="w-6 h-6 text-teal-600" />
-              <span className="text-xl font-bold">DecorAI</span>
+              <span className="text-xl font-bold">NyumbaAI</span>
               <span className="text-sm text-gray-500 ml-2">Demo</span>
             </div>
             <button

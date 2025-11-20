@@ -1,5 +1,5 @@
 /**
- * Upload Router for DecorAI Marketplace
+ * Upload Router for NyumbaAI Marketplace
  * 
  * Handles file uploads for:
  * - Product images (vendors)

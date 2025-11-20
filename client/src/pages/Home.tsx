@@ -25,7 +25,7 @@ export default function Home() {
         <div className="container flex items-center justify-between h-16">
           <div className="flex items-center gap-2">
             <Sparkles className="w-6 h-6 text-primary" />
-            <span className="text-xl font-bold">DecorAI</span>
+            <span className="text-xl font-bold">NyumbaAI</span>
           </div>
           <div className="flex items-center gap-4">
             <Link href="/marketplace">
@@ -168,7 +168,7 @@ export default function Home() {
         <div className="container">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-4xl font-bold mb-6">Why Choose DecorAI?</h2>
+              <h2 className="text-4xl font-bold mb-6">Why Choose NyumbaAI?</h2>
               <div className="space-y-4">
                 {[
                   "AI-powered room analysis and recommendations",
@@ -257,7 +257,7 @@ export default function Home() {
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <Sparkles className="w-6 h-6 text-primary" />
-                <span className="text-lg font-bold">DecorAI</span>
+                <span className="text-lg font-bold">NyumbaAI</span>
               </div>
               <p className="text-sm text-muted-foreground">
                 Kenya's first AI-powered interior design marketplace.
@@ -289,7 +289,7 @@ export default function Home() {
             </div>
           </div>
           <div className="mt-12 pt-8 border-t text-center text-sm text-muted-foreground">
-            <p>© 2024 DecorAI. All rights reserved. Made in Kenya 🇰🇪</p>
+            <p>© 2024 NyumbaAI. All rights reserved. Made in Kenya 🇰🇪</p>
           </div>
         </div>
       </footer>

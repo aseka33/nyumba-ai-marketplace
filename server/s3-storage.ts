@@ -1,5 +1,5 @@
 /**
- * AWS S3 Storage Module for DecorAI Marketplace
+ * AWS S3 Storage Module for NyumbaAI Marketplace
  * 
  * This module provides direct AWS S3 integration for uploading and managing
  * product images, video files, and other media assets.

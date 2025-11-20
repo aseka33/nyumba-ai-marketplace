@@ -157,7 +157,7 @@ export default function ScheduleVisit() {
                 <ul className="space-y-2 text-sm text-blue-900">
                   <li className="flex items-start">
                     <span className="mr-2">✓</span>
-                    <span>When you show this QR code, the vendor knows you came from DecorAI</span>
+                    <span>When you show this QR code, the vendor knows you came from NyumbaAI</span>
                   </li>
                   <li className="flex items-start">
                     <span className="mr-2">✓</span>
@@ -326,7 +326,7 @@ export default function ScheduleVisit() {
 
             {/* Benefits */}
             <div className="mt-6 bg-teal-50 rounded-xl p-4">
-              <h4 className="font-medium text-teal-900 mb-2 text-sm">Why use DecorAI for your visit?</h4>
+              <h4 className="font-medium text-teal-900 mb-2 text-sm">Why use NyumbaAI for your visit?</h4>
               <ul className="space-y-1 text-xs text-teal-800">
                 <li>✓ Purchase protection & warranty</li>
                 <li>✓ Secure payment through platform</li>
