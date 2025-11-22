@@ -27,15 +27,15 @@ export default function AnalyzeRoom() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const uploadMutation = trpc.video.uploadVideo.useMutation({
+  const uploadMutation = trpc.photo.uploadPhoto.useMutation({
     onSuccess: (data) => {
-      toast.success("Video uploaded successfully! AI analysis in progress...");
+      toast.success("Photo uploaded successfully! AI analysis in progress...");
       setTimeout(() => {
-        setLocation(`/analysis/${data.videoId}?tier=${selectedBudgetTier}`);
+        setLocation(`/analysis/${data.photoId}?tier=${selectedBudgetTier}`);
       }, 1500);
     },
     onError: (error) => {
-      toast.error(error.message || "Failed to upload video");
+      toast.error(error.message || "Failed to upload photo");
       setUploading(false);
       setUploadProgress(0);
     }
@@ -45,8 +45,8 @@ export default function AnalyzeRoom() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('video/') && !file.type.startsWith('image/')) {
-      toast.error("Please select a video or image file");
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file (JPG, PNG, etc.)");
       return;
     }
 
@@ -78,7 +78,7 @@ export default function AnalyzeRoom() {
         setUploadProgress(60);
 
         await uploadMutation.mutateAsync({
-          videoData: base64Data,
+          photoData: base64Data,
           fileName: selectedFile.name,
           fileSize: selectedFile.size,
           mimeType: selectedFile.type,
@@ -100,7 +100,6 @@ export default function AnalyzeRoom() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white py-12 px-4">
       <div className="max-w-2xl mx-auto">
-        {/* Header */}
         <div className="text-center mb-12">
           <div className="flex justify-center mb-4">
             <div className="p-3 bg-orange-100 rounded-full">
@@ -108,10 +107,9 @@ export default function AnalyzeRoom() {
             </div>
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Analyze Your Room</h1>
-          <p className="text-gray-600">Upload a video or photo and get AI-powered design recommendations</p>
+          <p className="text-gray-600">Upload a photo and get AI-powered design recommendations</p>
         </div>
 
-        {/* Budget Tier Selection */}
         <Card className="mb-8 border-2 border-orange-200">
           <CardHeader>
             <CardTitle className="text-orange-600">Select Your Budget Tier</CardTitle>
@@ -138,33 +136,30 @@ export default function AnalyzeRoom() {
           </CardContent>
         </Card>
 
-        {/* File Upload */}
         <Card className="border-2 border-dashed border-orange-300">
           <CardHeader>
-            <CardTitle>Upload Your Video or Photo</CardTitle>
-            <CardDescription>Max 16MB • MP4, WebM, or Image formats</CardDescription>
+            <CardTitle>Upload Your Photo</CardTitle>
+            <CardDescription>Max 16MB • JPG, PNG, WebP formats</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {/* Upload Area */}
               <div
                 onClick={() => fileInputRef.current?.click()}
                 className="border-2 border-dashed border-orange-300 rounded-lg p-12 text-center cursor-pointer hover:bg-orange-50 transition-colors"
               >
                 <Upload className="w-12 h-12 text-orange-400 mx-auto mb-3" />
                 <p className="font-semibold text-gray-900 mb-1">Click to upload or drag and drop</p>
-                <p className="text-sm text-gray-500">Your room video or photo</p>
+                <p className="text-sm text-gray-500">Your room photo</p>
               </div>
 
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="video/*,image/*"
+                accept="image/*"
                 onChange={handleFileSelect}
                 className="hidden"
               />
 
-              {/* Selected File */}
               {selectedFile && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
                   <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
@@ -175,7 +170,6 @@ export default function AnalyzeRoom() {
                 </div>
               )}
 
-              {/* Progress Bar */}
               {uploading && (
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
@@ -186,7 +180,6 @@ export default function AnalyzeRoom() {
                 </div>
               )}
 
-              {/* Upload Button */}
               <Button
                 onClick={handleUpload}
                 disabled={!selectedFile || uploading}
@@ -208,11 +201,10 @@ export default function AnalyzeRoom() {
           </CardContent>
         </Card>
 
-        {/* Info Alert */}
         <Alert className="mt-8 border-blue-200 bg-blue-50">
           <AlertCircle className="h-4 w-4 text-blue-600" />
           <AlertDescription className="text-blue-800">
-            <strong>Tip:</strong> For best results, record a video showing different angles of your room with good lighting, or upload a clear photo of the space you want to redesign.
+            <strong>Tip:</strong> For best results, upload a clear, well-lit photo of the space you want to redesign.
           </AlertDescription>
         </Alert>
       </div>
