@@ -39,7 +39,7 @@ export default function AnalysisResult() {
             </Alert>
             <div className="mt-6 text-center">
               <Button onClick={() => setLocation('/analyze')}>
-                Upload Video
+                Upload Photo
               </Button>
             </div>
           </div>

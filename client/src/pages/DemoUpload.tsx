@@ -154,7 +154,7 @@ export default function DemoUpload() {
               NyumbaAI <span className="text-teal-600">Demo</span>
             </h1>
             <div className="text-sm text-gray-500">
-              Step 2 of 3 • Upload your room video
+              Step 2 of 3 • Upload your room photo
             </div>
           </div>
         </div>
@@ -167,10 +167,10 @@ export default function DemoUpload() {
             {/* Hero Section */}
             <div className="text-center space-y-4">
               <h2 className="text-4xl font-bold text-gray-900">
-                Upload Your Room Video
+                Upload Your Room Photo
               </h2>
               <p className="text-xl text-gray-600">
-                Record a 10-30 second walkthrough of your room for best results
+                Take a clear photo of your room for best results
               </p>
             </div>
 
@@ -198,7 +198,7 @@ export default function DemoUpload() {
                   </div>
                   <div>
                     <p className="text-2xl font-semibold text-gray-700">
-                      Drop your room video here
+                      Drop your room photo here
                     </p>
                     <p className="text-gray-500 mt-2">
                       or click to browse
@@ -252,7 +252,7 @@ export default function DemoUpload() {
                   <h3 className="font-semibold text-gray-900 mb-4">What happens next?</h3>
                   <div className="space-y-3">
                     {[
-                      'AI extracts the best frame from your video',
+                      'AI analyzes your room photo in detail',
                       'Analyzes room dimensions, lighting, and current style',
                       'Matches furniture based on your preferences and budget',
                       'Shows you a personalized before/after visualization',
@@ -347,7 +347,7 @@ export default function DemoUpload() {
             </div>
 
             <div className="text-center text-sm text-gray-500">
-              <p>🔒 Your video is processed securely and never stored permanently</p>
+              <p>🔒 Your photo is processed securely and never stored permanently</p>
             </div>
           </div>
         )}

@@ -134,7 +134,7 @@ export default function DemoPreferences() {
             <div className="w-12 h-px bg-gray-300"></div>
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center">2</div>
-              <span>Upload Video</span>
+              <span>Upload Photo</span>
             </div>
             <div className="w-12 h-px bg-gray-300"></div>
             <div className="flex items-center gap-2">
@@ -331,7 +331,7 @@ export default function DemoPreferences() {
                   : 'bg-gray-200 text-gray-400 cursor-not-allowed'
               }`}
             >
-              Continue to Upload Video
+              Continue to Upload Photo
               <ArrowRight className="w-5 h-5" />
             </button>
             {!isComplete && (
