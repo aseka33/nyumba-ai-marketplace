@@ -17,7 +17,7 @@ export async function analyzeRoomVideo(videoId: number, userId: number, videoUrl
     await updateVideoStatus(videoId, "processing");
 
     // Enhanced prompt for professional interior design recommendations
-    const budgetContext = budgetTier ? `The user has selected a ${budgetTier} budget tier. Tailor recommendations accordingly with specific price ranges in Kenyan Shillings (KES).` : "));
+    const budgetContext = budgetTier ? `The user has selected a ${budgetTier} budget tier. Tailor recommendations accordingly with specific price ranges in Kenyan Shillings (KES).` : '';
     
     const analysisPrompt = `You are a world-class interior designer with expertise in African and Kenyan home aesthetics. Analyze this room and provide professional recommendations.
 
