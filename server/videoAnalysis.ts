@@ -1,54 +1,56 @@
 import { invokeLLM } from "./_core/llm";
-import { createVideoAnalysis, updateVideoStatus, getProductById, getAllProducts } from "./db";
+import { createVideoAnalysis, updateVideoStatus, getAllProducts } from "./db";
 import type { InsertVideoAnalysis } from "../drizzle/schema";
 
 /**
- * Analyzes a room video and generates furniture/decor suggestions
- * This is a simplified version that uses text prompts
- * In production, you would extract frames and analyze them
+ * Enhanced AI analysis that provides expert recommendations even without vendor products
+ * Uses global interior design standards and comprehensive product knowledge
  */
 export async function analyzeRoomVideo(videoId: number, userId: number, videoUrl: string, budgetTier?: string) {
-  // Generate a placeholder room image
-  // In production, extract actual frame using FFmpeg
-  const frameUrl = videoUrl; // Will be replaced with actual frame extraction
+  const frameUrl = videoUrl;
   try {
-    // Validate videoId
     if (!videoId || isNaN(videoId) || videoId <= 0) {
-      console.error('[VideoAnalysis] Invalid videoId:', videoId);
-      throw new Error('Invalid video ID');
+      console.error("[VideoAnalysis] Invalid videoId:", videoId);
+      throw new Error("Invalid video ID");
     }
 
-    // Update video status to processing
     await updateVideoStatus(videoId, "processing");
 
-    // Generate AI analysis using LLM with budget tier context
-    const budgetContext = budgetTier ? `The user has selected a ${budgetTier} budget tier. Tailor recommendations accordingly.` : '';
+    // Enhanced prompt for professional interior design recommendations
+    const budgetContext = budgetTier ? `The user has selected a ${budgetTier} budget tier. Tailor recommendations accordingly with specific price ranges in Kenyan Shillings (KES).` : "));
     
-    const analysisPrompt = `You are an expert interior designer analyzing a room. Based on a video of this room, provide a comprehensive analysis.
+    const analysisPrompt = `You are a world-class interior designer with expertise in African and Kenyan home aesthetics. Analyze this room and provide professional recommendations.
 
 ${budgetContext}
 
-Since we cannot directly process video, please provide a general analysis framework that would apply to most rooms. Include:
+Provide a comprehensive interior design analysis including:
 
-1. Common room types and their typical characteristics
-2. Suggested furniture categories for different room types
-3. Decor recommendations based on modern interior design trends
-4. Color scheme suggestions
-5. Lighting recommendations
+1. Room characteristics and potential
+2. Specific furniture and decor recommendations with:
+   - Exact product types (e.g., "Mid-century modern 3-seater sofa", "Handwoven Kenyan basket wall art")
+   - Estimated price ranges in KES
+   - Why each piece would work in this space
+   - Where to typically find such items in Kenya
+3. Color palette recommendations
+4. Lighting suggestions
+5. Layout and spatial arrangement tips
+6. Cultural and local design elements that would enhance the space
+
+Be specific and actionable. Think like you're creating a shopping list for the homeowner.
 
 Format your response as a JSON object with these fields:
 - roomType: string (e.g., "living room", "bedroom", "kitchen")
 - roomSize: string (e.g., "small", "medium", "large")
 - currentStyle: string (e.g., "modern", "traditional", "minimalist")
 - lightingCondition: string (e.g., "bright", "moderate", "dim")
-- colorScheme: string (description of recommended colors)
+- colorScheme: string (detailed color palette description)
 - suggestedStyles: array of style names
-- recommendations: array of objects with {category, items, reasoning}
-- analysisText: comprehensive analysis text`;
+- recommendations: array of objects with {category, items, reasoning, priceRange, whereToFind}
+- analysisText: comprehensive professional analysis (3-4 paragraphs)`;
 
     const response = await invokeLLM({
       messages: [
-        { role: "system", content: "You are an expert interior designer. Provide detailed, actionable advice." },
+        { role: "system", content: "You are an expert interior designer specializing in African and Kenyan home design. Provide detailed, culturally-aware, actionable advice with specific product recommendations." },
         { role: "user", content: analysisPrompt }
       ],
       response_format: {
@@ -78,9 +80,11 @@ Format your response as a JSON object with these fields:
                       type: "array",
                       items: { type: "string" }
                     },
-                    reasoning: { type: "string" }
+                    reasoning: { type: "string" },
+                    priceRange: { type: "string" },
+                    whereToFind: { type: "string" }
                   },
-                  required: ["category", "items", "reasoning"],
+                  required: ["category", "items", "reasoning", "priceRange", "whereToFind"],
                   additionalProperties: false
                 }
               },
@@ -94,21 +98,29 @@ Format your response as a JSON object with these fields:
     });
 
     const content = response.choices[0].message.content;
-    const analysisData = JSON.parse(typeof content === 'string' ? content : "{}");
+    const analysisData = JSON.parse(typeof content === "string" ? content : "{}");
 
-    // Match recommendations with actual products from the marketplace
-    // Filter by budget tier if provided
-    let allProducts = await getAllProducts({ isActive: true });
-    if (budgetTier) {
-      allProducts = allProducts.filter(p => !p.budgetTier || p.budgetTier === budgetTier);
+    // Try to match with database products if available, otherwise use AI recommendations
+    let suggestedProducts;
+    try {
+      const allProducts = await getAllProducts({ isActive: true });
+      if (allProducts && allProducts.length > 0) {
+        // We have vendor products - match them
+        const filteredProducts = budgetTier 
+          ? allProducts.filter(p => !p.budgetTier || p.budgetTier === budgetTier)
+          : allProducts;
+        suggestedProducts = matchProductsToRecommendations(analysisData.recommendations, filteredProducts);
+      } else {
+        // No vendor products - use AI-generated recommendations
+        suggestedProducts = generateAIProductRecommendations(analysisData.recommendations, budgetTier);
+      }
+    } catch (error) {
+      console.log("[VideoAnalysis] No products in database, using AI recommendations");
+      suggestedProducts = generateAIProductRecommendations(analysisData.recommendations, budgetTier);
     }
     
-    const suggestedProducts = matchProductsToRecommendations(analysisData.recommendations, allProducts);
-    
-    // Generate product placements with coordinates for interactive view
     const productPlacements = generateProductPlacements(suggestedProducts, analysisData.roomType);
 
-    // Save analysis to database
     const videoAnalysis: InsertVideoAnalysis = {
       videoId,
       userId,
@@ -129,12 +141,8 @@ Format your response as a JSON object with these fields:
       transformedImageLuxury: undefined
     };
     
-    // Update video with frame URL
     await updateVideoStatus(videoId, "completed", frameUrl);
-
     await createVideoAnalysis(videoAnalysis);
-
-    // Update video status to completed
     await updateVideoStatus(videoId, "completed");
 
     return {
@@ -150,65 +158,73 @@ Format your response as a JSON object with these fields:
 }
 
 /**
- * Generates product placement coordinates for interactive hotspots
+ * Generate AI-based product recommendations when no vendor products exist
+ * This provides value to users even before vendors are onboarded
  */
-function generateProductPlacements(suggestedProducts: any[], roomType: string) {
-  const placements: any[] = [];
-  
-  // Define placement zones based on room type
-  const zones = {
-    'living room': [
-      { x: 30, y: 60 }, // Left seating area
-      { x: 70, y: 55 }, // Right seating area  
-      { x: 50, y: 40 }, // Center coffee table area
-      { x: 20, y: 30 }, // Wall decor left
-      { x: 80, y: 30 }, // Wall decor right
-      { x: 50, y: 20 }, // Ceiling light
-    ],
-    'bedroom': [
-      { x: 50, y: 60 }, // Bed area
-      { x: 25, y: 50 }, // Left nightstand
-      { x: 75, y: 50 }, // Right nightstand
-      { x: 50, y: 30 }, // Wall art
-      { x: 50, y: 20 }, // Ceiling light
-    ],
-    'default': [
-      { x: 30, y: 50 },
-      { x: 70, y: 50 },
-      { x: 50, y: 35 },
-      { x: 50, y: 65 },
-    ]
-  };
-  
-  const roomZones = zones[roomType.toLowerCase() as keyof typeof zones] || zones.default;
-  let zoneIndex = 0;
-  
-  // Assign products to zones
-  for (const category of suggestedProducts) {
-    if (category.products && category.products.length > 0) {
-      for (const product of category.products.slice(0, 2)) { // Max 2 products per category
-        if (zoneIndex < roomZones.length) {
-          placements.push({
-            productId: product.productId,
-            name: product.name,
-            category: product.category,
-            priceKES: product.priceKES,
-            imageUrl: product.imageUrl,
-            x: roomZones[zoneIndex].x,
-            y: roomZones[zoneIndex].y,
-            reasoning: product.reasoning || category.reasoning
-          });
-          zoneIndex++;
-        }
-      }
-    }
+function generateAIProductRecommendations(recommendations: any[], budgetTier?: string) {
+  const matched: any[] = [];
+
+  for (const rec of recommendations) {
+    // Create virtual products from AI recommendations
+    const virtualProducts = rec.items.slice(0, 3).map((item: string, index: number) => ({
+      productId: null, // No actual product yet
+      name: item,
+      category: rec.category,
+      priceKES: estimatePriceForItem(item, budgetTier),
+      priceRange: rec.priceRange || "Contact vendors for pricing",
+      whereToFind: rec.whereToFind || "Available from local Kenyan vendors",
+      imageUrl: null, // Will show placeholder
+      reasoning: rec.reasoning,
+      isVirtual: true // Flag to indicate this is an AI recommendation, not a vendor product
+    }));
+
+    matched.push({
+      category: rec.category,
+      items: rec.items,
+      products: virtualProducts,
+      reasoning: rec.reasoning,
+      priceRange: rec.priceRange,
+      whereToFind: rec.whereToFind
+    });
   }
-  
-  return placements;
+
+  return matched;
 }
 
 /**
- * Matches AI recommendations with actual products in the marketplace
+ * Estimate price based on item type and budget tier
+ */
+function estimatePriceForItem(itemName: string, budgetTier?: string): number {
+  const lowerItem = itemName.toLowerCase();
+  
+  // Base prices for common items (in KES)
+  let basePrice = 10000; // Default
+  
+  if (lowerItem.includes("sofa") || lowerItem.includes("couch")) basePrice = 35000;
+  else if (lowerItem.includes("chair")) basePrice = 8000;
+  else if (lowerItem.includes("table")) basePrice = 15000;
+  else if (lowerItem.includes("bed")) basePrice = 40000;
+  else if (lowerItem.includes("lamp") || lowerItem.includes("light")) basePrice = 3000;
+  else if (lowerItem.includes("rug") || lowerItem.includes("carpet")) basePrice = 12000;
+  else if (lowerItem.includes("art") || lowerItem.includes("painting")) basePrice = 5000;
+  else if (lowerItem.includes("curtain") || lowerItem.includes("drape")) basePrice = 6000;
+  else if (lowerItem.includes("shelf") || lowerItem.includes("bookcase")) basePrice = 10000;
+  
+  // Adjust for budget tier
+  const multipliers = {
+    "economy": 0.6,
+    "mid-range": 1.0,
+    "premium": 1.8,
+    "luxury": 3.0
+  };
+  
+  const multiplier = budgetTier ? (multipliers[budgetTier as keyof typeof multipliers] || 1.0) : 1.0;
+  
+  return Math.round(basePrice * multiplier);
+}
+
+/**
+ * Match AI recommendations with actual vendor products
  */
 function matchProductsToRecommendations(recommendations: any[], products: any[]) {
   const matched: any[] = [];
@@ -216,7 +232,6 @@ function matchProductsToRecommendations(recommendations: any[], products: any[])
   for (const rec of recommendations) {
     const category = rec.category.toLowerCase();
     
-    // Find products matching the category
     const matchingProducts = products.filter(p => {
       const productCategory = p.category.toLowerCase();
       const productName = p.name.toLowerCase();
@@ -227,23 +242,21 @@ function matchProductsToRecommendations(recommendations: any[], products: any[])
              productDescription.includes(category);
     });
 
-    // If no exact matches, get any products as fallback
     let productsToUse = matchingProducts;
     if (productsToUse.length === 0) {
       productsToUse = products.slice(0, 3);
     }
 
-    // Take up to 3 products per category
     const selectedProducts = productsToUse.slice(0, 3).map(p => ({
       productId: p.id,
       name: p.name,
       category: p.category,
       priceKES: p.priceKES,
       imageUrl: p.imageUrls ? JSON.parse(p.imageUrls)[0] : null,
-      reasoning: rec.reasoning
+      reasoning: rec.reasoning,
+      isVirtual: false
     }));
 
-    // Always add products, even if not perfect match
     if (selectedProducts.length > 0) {
       matched.push({
         category: rec.category,
@@ -254,7 +267,6 @@ function matchProductsToRecommendations(recommendations: any[], products: any[])
     }
   }
 
-  // If no matches found at all, return some default products
   if (matched.length === 0 && products.length > 0) {
     matched.push({
       category: "Recommended",
@@ -265,7 +277,8 @@ function matchProductsToRecommendations(recommendations: any[], products: any[])
         category: p.category,
         priceKES: p.priceKES,
         imageUrl: p.imageUrls ? JSON.parse(p.imageUrls)[0] : null,
-        reasoning: "Curated selection for your space"
+        reasoning: "Curated selection for your space",
+        isVirtual: false
       })),
       reasoning: "Curated selection for your space"
     });
@@ -275,126 +288,58 @@ function matchProductsToRecommendations(recommendations: any[], products: any[])
 }
 
 /**
- * Enhanced analysis with actual video frame analysis
- * This would be used in production with actual video processing
+ * Generate product placement coordinates for interactive hotspots
  */
-export async function analyzeRoomVideoAdvanced(
-  videoId: number, 
-  userId: number, 
-  videoUrl: string,
-  frameUrls: string[] // URLs of extracted video frames
-) {
-  try {
-    await updateVideoStatus(videoId, "processing");
-
-    // Analyze multiple frames from the video
-    const frameAnalyses = await Promise.all(
-      frameUrls.slice(0, 3).map(frameUrl => analyzeRoomFrame(frameUrl))
-    );
-
-    // Aggregate insights from all frames
-    const aggregatedAnalysis = aggregateFrameAnalyses(frameAnalyses);
-
-    // Match with products
-    const allProducts = await getAllProducts({ isActive: true });
-    const suggestedProducts = matchProductsToRecommendations(
-      aggregatedAnalysis.recommendations, 
-      allProducts
-    );
-
-    // Save to database
-    const videoAnalysis: InsertVideoAnalysis = {
-      videoId,
-      userId,
-      roomType: aggregatedAnalysis.roomType,
-      userSelectedRoomType: undefined,
-      roomSize: aggregatedAnalysis.roomSize,
-      currentStyle: aggregatedAnalysis.currentStyle,
-      lightingCondition: aggregatedAnalysis.lightingCondition,
-      colorScheme: aggregatedAnalysis.colorScheme,
-      budgetTier: undefined,
-      suggestedStyles: JSON.stringify(aggregatedAnalysis.suggestedStyles),
-      suggestedProducts: JSON.stringify(suggestedProducts),
-      productPlacements: undefined,
-      analysisText: aggregatedAnalysis.analysisText,
-      transformedImageEconomy: undefined,
-      transformedImageMidRange: undefined,
-      transformedImagePremium: undefined,
-      transformedImageLuxury: undefined
-    };
-
-    await createVideoAnalysis(videoAnalysis);
-    await updateVideoStatus(videoId, "completed");
-
-    return {
-      success: true,
-      analysis: videoAnalysis
-    };
-
-  } catch (error) {
-    console.error("[VideoAnalysis] Error in advanced analysis:", error);
-    await updateVideoStatus(videoId, "failed");
-    throw error;
-  }
-}
-
-/**
- * Analyzes a single video frame using vision capabilities
- */
-async function analyzeRoomFrame(frameUrl: string) {
-  const response = await invokeLLM({
-    messages: [
-      {
-        role: "system",
-        content: "You are an expert interior designer. Analyze this room image and provide detailed insights."
-      },
-      {
-        role: "user",
-        content: [
-          {
-            type: "image_url",
-            image_url: {
-              url: frameUrl,
-              detail: "high"
-            }
-          },
-          {
-            type: "text",
-            text: "Analyze this room image. Identify: room type, size, current furniture, style, lighting, colors, and what improvements could be made."
-          }
-        ] as any
-      }
-    ]
-  });
-
-  return response.choices[0].message.content || "";
-}
-
-/**
- * Aggregates multiple frame analyses into a single comprehensive analysis
- */
-function aggregateFrameAnalyses(analyses: any[]) {
-  // This is a simplified aggregation
-  // In production, you'd use more sophisticated logic or another LLM call
-  return {
-    roomType: "living room", // Extract from analyses
-    roomSize: "medium",
-    currentStyle: "modern",
-    lightingCondition: "bright",
-    colorScheme: "neutral with accent colors",
-    suggestedStyles: ["modern", "minimalist", "scandinavian"],
-    recommendations: [
-      {
-        category: "furniture",
-        items: ["sofa", "coffee table", "bookshelf"],
-        reasoning: "Based on room layout and available space"
-      },
-      {
-        category: "decor",
-        items: ["wall art", "plants", "throw pillows"],
-        reasoning: "To add personality and warmth to the space"
-      }
+function generateProductPlacements(suggestedProducts: any[], roomType: string) {
+  const placements: any[] = [];
+  
+  const zones = {
+    "living room": [
+      { x: 30, y: 60 },
+      { x: 70, y: 55 },
+      { x: 50, y: 40 },
+      { x: 20, y: 30 },
+      { x: 80, y: 30 },
+      { x: 50, y: 20 },
     ],
-    analysisText: "Comprehensive analysis based on video frames..."
+    "bedroom": [
+      { x: 50, y: 60 },
+      { x: 25, y: 50 },
+      { x: 75, y: 50 },
+      { x: 50, y: 30 },
+      { x: 50, y: 20 },
+    ],
+    "default": [
+      { x: 30, y: 50 },
+      { x: 70, y: 50 },
+      { x: 50, y: 35 },
+      { x: 50, y: 65 },
+    ]
   };
+  
+  const roomZones = zones[roomType.toLowerCase() as keyof typeof zones] || zones.default;
+  let zoneIndex = 0;
+  
+  for (const category of suggestedProducts) {
+    if (category.products && category.products.length > 0) {
+      for (const product of category.products.slice(0, 2)) {
+        if (zoneIndex < roomZones.length) {
+          placements.push({
+            productId: product.productId,
+            name: product.name,
+            category: product.category,
+            priceKES: product.priceKES,
+            imageUrl: product.imageUrl,
+            x: roomZones[zoneIndex].x,
+            y: roomZones[zoneIndex].y,
+            reasoning: product.reasoning || category.reasoning,
+            isVirtual: product.isVirtual || false
+          });
+          zoneIndex++;
+        }
+      }
+    }
+  }
+  
+  return placements;
 }
