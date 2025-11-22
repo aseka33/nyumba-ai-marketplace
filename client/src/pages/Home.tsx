@@ -69,7 +69,7 @@ export default function Home() {
                 <span className="text-primary">Smart Design</span>
               </h1>
               <p className="text-xl text-muted-foreground">
-                Upload a video of your room and get instant AI-powered furniture and decor recommendations. 
+                Upload a photo of your room and get instant AI-powered furniture and decor recommendations. 
                 Shop directly from Kenya's best interior design businesses.
               </p>
               <div className="flex flex-wrap gap-4">
@@ -107,7 +107,7 @@ export default function Home() {
               <div className="aspect-square rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 p-8 flex items-center justify-center">
                 <div className="text-center space-y-4">
                   <Camera className="w-24 h-24 mx-auto text-primary" />
-                  <p className="text-lg font-medium">Upload Your Room Video</p>
+                  <p className="text-lg font-medium">Upload Your Room Photo</p>
                   <p className="text-muted-foreground">Get AI suggestions in seconds</p>
                 </div>
               </div>
@@ -131,9 +131,9 @@ export default function Home() {
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                   <Upload className="w-6 h-6 text-primary" />
                 </div>
-                <CardTitle>1. Upload Video</CardTitle>
+                <CardTitle>1. Upload Photo</CardTitle>
                 <CardDescription>
-                  Record a quick video of your room using your phone. Our AI analyzes the space, lighting, and style.
+                  Take a photo of your room using your phone. Our AI analyzes the space, lighting, and style.
                 </CardDescription>
               </CardHeader>
             </Card>
