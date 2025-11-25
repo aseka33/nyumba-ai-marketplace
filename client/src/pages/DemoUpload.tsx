@@ -1,7 +1,7 @@
 /**
  * Demo Upload Page - No Login Required
  * 
- * Second step after preferences - upload video for REAL AI analysis
+ * Second step after preferences - upload photo for REAL AI analysis
  */
 
 import { useState, useRef } from 'react';
@@ -20,8 +20,8 @@ export default function DemoUpload() {
   const [uploading, setUploading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisSteps, setAnalysisSteps] = useState<AnalysisStep[]>([
-    { id: 'upload', label: 'Uploading video', completed: false },
-    { id: 'extract', label: 'Extracting room frame', completed: false },
+    { id: 'upload', label: 'Uploading photo', completed: false },
+    { id: 'analyze_image', label: 'Processing image', completed: false },
     { id: 'detect', label: 'Detecting room dimensions', completed: false },
     { id: 'analyze', label: 'Analyzing lighting & style', completed: false },
     { id: 'match', label: 'Finding perfect matches', completed: false },
@@ -34,13 +34,13 @@ export default function DemoUpload() {
   const analyzeVideoMutation = trpc.upload.analyzeRoomVideo.useMutation();
 
   const handleFileSelect = (file: File) => {
-    if (!file.type.startsWith('video/')) {
-      setError('Please select a video file');
+    if (!file.type.startsWith('image/')) {
+      setError('Please select an image file (JPG, PNG, or HEIC)');
       return;
     }
 
-    if (file.size > 50 * 1024 * 1024) {
-      setError('Video must be less than 50MB');
+    if (file.size > 10 * 1024 * 1024) {
+      setError('Photo must be less than 10MB');
       return;
     }
 
