@@ -31,7 +31,7 @@ export default function DemoUpload() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [, setLocation] = useLocation();
 
-  const analyzeVideoMutation = trpc.upload.analyzeRoomVideo.useMutation();
+  const analyzePhotoMutation = trpc.photo.uploadPhoto.useMutation();
 
   const handleFileSelect = (file: File) => {
     if (!file.type.startsWith('image/')) {
@@ -112,11 +112,12 @@ export default function DemoUpload() {
       setTimeout(() => completeStep('generate'), 8000);
 
       // Call AI analysis API (this takes 10-20 seconds)
-      const result = await analyzeVideoMutation.mutateAsync({
-        videoData,
+      const result = await analyzePhotoMutation.mutateAsync({
+        photoData: videoData,
         fileName: selectedFile.name,
         fileSize: selectedFile.size,
-        preferences
+        mimeType: selectedFile.type,
+        budgetTier: preferences.budget
       });
 
       // Ensure all steps are complete
