@@ -241,10 +241,10 @@ export default function DemoUpload() {
 
                     <button
                       onClick={handleAnalyze}
-                      disabled={uploading || analyzeVideoMutation.isLoading}
+                      disabled={uploading || analyzePhotoMutation.isLoading}
                       className="w-full bg-gradient-to-r from-teal-600 to-blue-600 text-white py-4 px-6 rounded-xl font-semibold text-lg hover:from-teal-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl"
                     >
-                      {uploading || analyzeVideoMutation.isLoading ? 'Starting AI Analysis...' : '✨ Analyze My Room with AI'}
+                      {uploading || analyzePhotoMutation.isLoading ? 'Starting AI Analysis...' : '✨ Analyze My Room with AI'}
                     </button>
                   </div>
                 </div>
