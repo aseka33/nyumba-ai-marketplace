@@ -218,9 +218,15 @@ export default function AnalysisResult() {
                     </div>
 
                     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {category.products?.map((product: any) => (
-                        <Link key={product.productId} href={`/product/${product.productId}`}>
-                          <Card className="group cursor-pointer hover:shadow-2xl transition-all duration-300 border-2 hover:border-primary/50 overflow-hidden h-full">
+                      {category.products?.map((product: any) => {
+                        const CardWrapper = product.isVirtual || !product.productId ? 'div' : Link;
+                        const cardProps = product.isVirtual || !product.productId 
+                          ? { key: product.name } 
+                          : { key: product.productId, href: `/product/${product.productId}` };
+                        
+                        return (
+                        <CardWrapper {...cardProps}>
+                          <Card className="group hover:shadow-2xl transition-all duration-300 border-2 hover:border-primary/50 overflow-hidden h-full">
                             {product.imageUrl ? (
                               <div className="aspect-[4/3] bg-muted overflow-hidden relative">
                                 <img 
@@ -246,15 +252,27 @@ export default function AnalysisResult() {
                                 <p className="text-2xl font-bold text-primary">
                                   KES {(product.priceKES / 100).toLocaleString()}
                                 </p>
-                                <Button size="sm" variant="ghost" className="group-hover:bg-primary group-hover:text-primary-foreground">
-                                  View
-                                  <ArrowRight className="w-4 h-4 ml-1" />
-                                </Button>
+                                {product.isVirtual || !product.productId ? (
+                                  <Badge variant="secondary" className="text-xs">
+                                    AI Suggestion
+                                  </Badge>
+                                ) : (
+                                  <Button size="sm" variant="ghost" className="group-hover:bg-primary group-hover:text-primary-foreground">
+                                    View
+                                    <ArrowRight className="w-4 h-4 ml-1" />
+                                  </Button>
+                                )}
                               </div>
+                              {(product.isVirtual || !product.productId) && product.whereToFind && (
+                                <p className="text-sm text-muted-foreground mt-2">
+                                  💡 {product.whereToFind}
+                                </p>
+                              )}
                             </CardContent>
                           </Card>
-                        </Link>
-                      ))}
+                        </CardWrapper>
+                        );
+                      })}
                     </div>
                   </div>
                 ))
