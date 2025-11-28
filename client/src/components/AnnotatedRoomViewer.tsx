@@ -104,11 +104,17 @@ export default function AnnotatedRoomViewer({ frameUrl, placements }: AnnotatedR
             <CardContent className="p-0">
               {/* Product Image */}
               <div className="relative aspect-[4/3] bg-muted">
-                <img 
-                  src={selectedProduct.imageUrl} 
-                  alt={selectedProduct.name}
-                  className="w-full h-full object-cover"
-                />
+                {selectedProduct.imageUrl ? (
+                  <img 
+                    src={selectedProduct.imageUrl} 
+                    alt={selectedProduct.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
+                    <ShoppingCart className="w-24 h-24 text-muted-foreground" />
+                  </div>
+                )}
                 <Button
                   variant="ghost"
                   size="icon"
@@ -137,15 +143,23 @@ export default function AnnotatedRoomViewer({ frameUrl, placements }: AnnotatedR
                 </div>
 
                 <div className="flex gap-3">
-                  <Link href={`/product/${selectedProduct.productId}`} className="flex-1">
-                    <Button className="w-full" size="lg">
-                      <Eye className="w-4 h-4 mr-2" />
-                      View Details
+                  {selectedProduct.productId ? (
+                    <Link href={`/product/${selectedProduct.productId}`} className="flex-1">
+                      <Button className="w-full" size="lg">
+                        <Eye className="w-4 h-4 mr-2" />
+                        View Details
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Button className="w-full" size="lg" variant="secondary" disabled>
+                      AI Suggestion Only
                     </Button>
-                  </Link>
-                  <Button variant="outline" size="lg">
-                    <ShoppingCart className="w-4 h-4" />
-                  </Button>
+                  )}
+                  {selectedProduct.productId && (
+                    <Button variant="outline" size="lg">
+                      <ShoppingCart className="w-4 h-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
             </CardContent>
