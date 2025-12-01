@@ -23,10 +23,10 @@ import AnnotatedRoomViewer from "@/components/AnnotatedRoomViewer";
 export default function AnalysisResult() {
   const params = useParams();
   const [, setLocation] = useLocation();
-  const videoId = params.id ? parseInt(params.id) : 0;
+  const photoId = params.id ? parseInt(params.id) : 0;
 
   // Validate video ID
-  if (!params.id || isNaN(videoId) || videoId <= 0) {
+  if (!params.id || isNaN(photoId) || photoId <= 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-accent/5 to-background">
         <div className="container py-12">
@@ -34,11 +34,11 @@ export default function AnalysisResult() {
             <Alert variant="destructive">
               <AlertCircle className="w-4 h-4" />
               <AlertDescription>
-                Invalid video ID. Please upload a video first.
+                Invalid photo ID. Please upload a photo first.
               </AlertDescription>
             </Alert>
             <div className="mt-6 text-center">
-              <Button onClick={() => setLocation('/analyze')}>
+              <Button onClick={() => setLocation('/demo/upload')}>
                 Upload Photo
               </Button>
             </div>
@@ -48,12 +48,12 @@ export default function AnalysisResult() {
     );
   }
 
-  const { data, isLoading, error } = trpc.video.getVideoAnalysis.useQuery(
-    { videoId },
+  const { data, isLoading, error } = trpc.photo.getPhotoAnalysis.useQuery(
+    { photoId },
     { 
-      enabled: videoId > 0,
+      enabled: photoId > 0,
       refetchInterval: (query) => {
-        return query.state.data?.video?.status === 'processing' ? 3000 : false;
+        return query.state.data?.photo?.status === 'processing' ? 3000 : false;
       }
     }
   );
@@ -83,11 +83,11 @@ export default function AnalysisResult() {
             <Alert variant="destructive">
               <AlertCircle className="w-4 h-4" />
               <AlertDescription>
-                Failed to load analysis. {error?.message || 'Video not found.'}
+                Failed to load analysis. {error?.message || 'Photo not found.'}
               </AlertDescription>
             </Alert>
             <div className="mt-6 text-center">
-              <Button onClick={() => setLocation('/analyze')}>
+              <Button onClick={() => setLocation('/demo/upload')}>
                 Try Another Analysis
               </Button>
             </div>
@@ -97,9 +97,9 @@ export default function AnalysisResult() {
     );
   }
 
-  const { video, analysis } = data;
+  const { photo, analysis } = data;
 
-  if (video.status === 'processing') {
+  if (photo.status === 'processing') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-accent/5 to-background flex items-center justify-center">
         <Card className="max-w-md w-full">
@@ -107,7 +107,7 @@ export default function AnalysisResult() {
             <Loader2 className="w-16 h-16 mx-auto animate-spin text-primary" />
             <h2 className="text-2xl font-bold">Analyzing Your Room</h2>
             <p className="text-muted-foreground">
-              Our AI is analyzing your video and generating personalized recommendations. This usually takes 10-30 seconds.
+              Our AI is analyzing your photo and generating personalized recommendations. This usually takes 10-30 seconds.
             </p>
           </CardContent>
         </Card>
@@ -115,7 +115,7 @@ export default function AnalysisResult() {
     );
   }
 
-  if (video.status === 'failed') {
+  if (photo.status === 'failed') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-accent/5 to-background">
         <div className="container py-12">
@@ -123,12 +123,12 @@ export default function AnalysisResult() {
             <Alert variant="destructive">
               <AlertCircle className="w-4 h-4" />
               <AlertDescription>
-                Analysis failed. Please try uploading your video again.
+                Analysis failed. Please try uploading your photo again.
               </AlertDescription>
             </Alert>
             <div className="mt-6 text-center">
-              <Button onClick={() => setLocation('/analyze')}>
-                Upload New Video
+              <Button onClick={() => setLocation('/demo/upload')}>
+                Upload New Photo
               </Button>
             </div>
           </div>
@@ -157,8 +157,7 @@ export default function AnalysisResult() {
   const suggestedStyles = JSON.parse(analysis.suggestedStyles || '[]');
   const suggestedProducts = JSON.parse(analysis.suggestedProducts || '[]');
   const productPlacements = JSON.parse(analysis.productPlacements || '[]');
-  // Use frameUrl if available, otherwise use video URL or placeholder
-  const frameUrl = video.frameUrl || video.videoUrl || '/placeholder-room.jpg';
+  const frameUrl = photo.frameUrl || photo.photoUrl;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-accent/5 to-background">
@@ -218,15 +217,9 @@ export default function AnalysisResult() {
                     </div>
 
                     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {category.products?.map((product: any) => {
-                        const CardWrapper = product.isVirtual || !product.productId ? 'div' : Link;
-                        const cardProps = product.isVirtual || !product.productId 
-                          ? { key: product.name } 
-                          : { key: product.productId, href: `/product/${product.productId}` };
-                        
-                        return (
-                        <CardWrapper {...cardProps}>
-                          <Card className="group hover:shadow-2xl transition-all duration-300 border-2 hover:border-primary/50 overflow-hidden h-full">
+                      {category.products?.map((product: any) => (
+                        <Link key={product.productId} href={`/product/${product.productId}`}>
+                          <Card className="group cursor-pointer hover:shadow-2xl transition-all duration-300 border-2 hover:border-primary/50 overflow-hidden h-full">
                             {product.imageUrl ? (
                               <div className="aspect-[4/3] bg-muted overflow-hidden relative">
                                 <img 
@@ -252,27 +245,15 @@ export default function AnalysisResult() {
                                 <p className="text-2xl font-bold text-primary">
                                   KES {(product.priceKES / 100).toLocaleString()}
                                 </p>
-                                {product.isVirtual || !product.productId ? (
-                                  <Badge variant="secondary" className="text-xs">
-                                    AI Suggestion
-                                  </Badge>
-                                ) : (
-                                  <Button size="sm" variant="ghost" className="group-hover:bg-primary group-hover:text-primary-foreground">
-                                    View
-                                    <ArrowRight className="w-4 h-4 ml-1" />
-                                  </Button>
-                                )}
+                                <Button size="sm" variant="ghost" className="group-hover:bg-primary group-hover:text-primary-foreground">
+                                  View
+                                  <ArrowRight className="w-4 h-4 ml-1" />
+                                </Button>
                               </div>
-                              {(product.isVirtual || !product.productId) && product.whereToFind && (
-                                <p className="text-sm text-muted-foreground mt-2">
-                                  💡 {product.whereToFind}
-                                </p>
-                              )}
                             </CardContent>
                           </Card>
-                        </CardWrapper>
-                        );
-                      })}
+                        </Link>
+                      ))}
                     </div>
                   </div>
                 ))
@@ -370,7 +351,7 @@ export default function AnalysisResult() {
                 Explore Full Marketplace
               </Button>
             </Link>
-            <Button size="lg" variant="outline" onClick={() => setLocation('/analyze')}>
+            <Button size="lg" variant="outline" onClick={() => setLocation('/demo/upload')}>
               <Sparkles className="w-5 h-5 mr-2" />
               Analyze Another Room
             </Button>
