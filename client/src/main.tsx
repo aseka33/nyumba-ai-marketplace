@@ -9,18 +9,7 @@ import App from "./App";
 import { getLoginUrl } from "./const";
 import "./index.css";
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-    },
-    mutations: {
-      retry: 0,
-      // Increase timeout for AI analysis (60 seconds)
-      networkMode: 'always',
-    },
-  },
-});
+const queryClient = new QueryClient();
 
 const redirectToLoginIfUnauthorized = (error: unknown) => {
   if (!(error instanceof TRPCClientError)) return;
@@ -29,6 +18,12 @@ const redirectToLoginIfUnauthorized = (error: unknown) => {
   const isUnauthorized = error.message === UNAUTHED_ERR_MSG;
 
   if (!isUnauthorized) return;
+
+  // Prevent redirect to login if the user is on a demo page, as the demo flow is intended to be unauthenticated.
+  if (window.location.pathname.startsWith('/demo')) {
+    console.warn("Unauthorized access on demo page. Not redirecting to login.");
+    return;
+  }
 
   window.location.href = getLoginUrl();
 };
@@ -49,12 +44,10 @@ queryClient.getMutationCache().subscribe(event => {
   }
 });
 
-const API_URL = import.meta.env.VITE_API_URL || "https://decorai-api-production.up.railway.app";
-
 const trpcClient = trpc.createClient({
   links: [
     httpBatchLink({
-      url: `${API_URL}/api/trpc`,
+      url: "/api/trpc",
       transformer: superjson,
       fetch(input, init) {
         return globalThis.fetch(input, {
