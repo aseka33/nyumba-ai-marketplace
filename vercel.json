@@ -1,10 +1,6 @@
 {
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api" }
-  ]
-}
-{
-  "rewrites": [
+    { "source": "/api/(.* )", "destination": "/api" },
     {
       "source": "/api/trpc/(.*)",
       "destination": "https://decorai-api-production.up.railway.app/api/trpc/$1"
