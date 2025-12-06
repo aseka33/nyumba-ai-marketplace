@@ -29,7 +29,6 @@ const vendorProcedure = protectedProcedure.use(({ ctx, next }) => {
 
 export const appRouter = router({
   system: systemRouter,
-
   auth: router({
     me: publicProcedure.query((opts) => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
@@ -92,9 +91,7 @@ export const appRouter = router({
           fileName: z.string(),
           fileSize: z.number(),
           mimeType: z.string(),
-          budgetTier: z
-            .enum(["economy", "mid-range", "premium", "luxury"])
-            .optional(),
+          budgetTier: z.enum(["economy", "mid-range", "premium", "luxury"]).optional(),
         })
       )
       .mutation(async ({ ctx, input }) => {
@@ -110,170 +107,48 @@ export const appRouter = router({
             });
           }
 
-          const buffer = Buffer.from(input.photoData.split(",")[1], "base64");
-
           const photoKey = `photos/${ctx.user.id}/${Date.now()}-${input.fileName}`;
-          const uploadResult = await storagePut(photoKey, buffer, input.mimeType);
-          photoUrl = uploadResult.url;
+          const photoBuffer = Buffer.from(input.photoData.split(",")[1], "base64");
 
-          // We still use the 'videos' table for simplicity, just treating it as 'media'
-          const result = await db.createVideo({
+          // 1. Upload photo to S3
+          photoUrl = await storagePut(photoKey, photoBuffer, input.mimeType);
+
+          // 2. Create initial photo record in DB
+          const photoRecord = await db.createPhoto({
             userId: ctx.user.id,
-            videoUrl: photoUrl, // Storing photo URL here
-            videoKey: photoKey,
-            fileSize: input.fileSize,
+            photoUrl,
             status: "processing",
+            budgetTier: input.budgetTier,
           });
+          photoId = photoRecord.id;
 
-          if (Array.isArray(result) && result[0]) {
-            photoId = Number(result[0].insertId);
-          } else if ((result as any).insertId) {
-            photoId = Number((result as any).insertId);
-          }
-
-          if (!photoId || isNaN(photoId) || photoId <= 0) {
-            throw new TRPCError({
-              code: "INTERNAL_SERVER_ERROR",
-              message: "Failed to create photo record",
-            });
-          }
-
-          // Start analysis asynchronously
+          // 3. Start AI analysis (non-blocking)
           analyzeRoomPhoto(photoId, ctx.user.id, photoUrl, input.budgetTier).catch(
-            (err) => {
-              console.error("[Photo] Analysis failed:", err);
+            (error) => {
+              console.error("AI Analysis failed for photo:", photoId, error);
+              db.updatePhotoStatus(photoId, "failed");
             }
           );
 
           return { photoId, photoUrl };
         } catch (error) {
-          console.error("[Photo Upload] Error in mutation:", error);
+          console.error("Error in uploadPhoto mutation:", error);
+          if (photoId > 0) {
+            db.updatePhotoStatus(photoId, "failed");
+          }
           throw error;
         }
       }),
 
-    getMyPhotos: protectedProcedure.query(async ({ ctx }) => {
-      return db.getVideosByUser(ctx.user.id); // Still gets from 'videos' table
-    }),
-
-    getPhotoAnalysis: protectedProcedure
-      .input(z.object({ photoId: z.number() })) // Changed from videoId
-      .query(async ({ ctx, input }) => {
-        const photo = await db.getVideoById(input.photoId);
-        if (!photo || photo.userId !== ctx.user.id) {
+    getPhotoAnalysis: publicProcedure // <--- FIX: Changed to publicProcedure
+      .input(z.object({ photoId: z.number() }))
+      .query(async ({ input }) => {
+        const photo = await db.getPhotoById(input.photoId);
+        if (!photo) {
           throw new TRPCError({ code: "NOT_FOUND", message: "Photo not found" });
         }
-
-        const analysis = await db.getVideoAnalysisByVideoId(input.photoId);
+        const analysis = await db.getPhotoAnalysis(input.photoId);
         return { photo, analysis };
       }),
   }),
-
-  // Product Management
-  product: router({
-    create: vendorProcedure
-      .input(
-        z.object({
-          name: z.string(),
-          description: z.string().optional(),
-          category: z.enum([
-            "furniture",
-            "art",
-            "plants",
-            "lighting",
-            "textiles",
-            "decor",
-            "other",
-          ]),
-          subCategory: z.string().optional(),
-          priceKES: z.number(),
-          stockQuantity: z.number(),
-          imageUrls: z.array(z.string()),
-          dimensions: z.string().optional(),
-          material: z.string().optional(),
-          color: z.string().optional(),
-          style: z.string().optional(),
-        })
-      )
-      .mutation(async ({ ctx, input }) => {
-        const result = await db.createProduct({
-          vendorId: ctx.user.id,
-          ...input,
-          imageUrls: JSON.stringify(input.imageUrls),
-          currency: "KES",
-        });
-        return { productId: result ? Number((result as any).insertId) : 0 };
-      }),
-
-    update: vendorProcedure
-      .input(
-        z.object({
-          productId: z.number(),
-          name: z.string().optional(),
-          description: z.string().optional(),
-          category: z
-            .enum([
-              "furniture",
-              "art",
-              "plants",
-              "lighting",
-              "textiles",
-              "decor",
-              "other",
-            ])
-            .optional(),
-          subCategory: z.string().optional(),
-          priceKES: z.number().optional(),
-          stockQuantity: z.number().optional(),
-          imageUrls: z.array(z.string()).optional(),
-          isActive: z.boolean().optional(),
-          isFeatured: z.boolean().optional(),
-        })
-      )
-      .mutation(async ({ ctx, input }) => {
-        const product = await db.getProductById(input.productId);
-        if (!product || product.vendorId !== ctx.user.id) {
-          throw new TRPCError({ code: "FORBIDDEN", message: "Product not found" });
-        }
-        await db.updateProduct(input.productId, input);
-        return { success: true };
-      }),
-
-    delete: vendorProcedure
-      .input(z.object({ productId: z.number() }))
-      .mutation(async ({ ctx, input }) => {
-        const product = await db.getProductById(input.productId);
-        if (!product || product.vendorId !== ctx.user.id) {
-          throw new TRPCError({ code: "FORBIDDEN", message: "Product not found" });
-        }
-        await db.deleteProduct(input.productId);
-        return { success: true };
-      }),
-
-    getMyProducts: vendorProcedure.query(async ({ ctx }) => {
-      return db.getProductsByVendor(ctx.user.id);
-    }),
-
-    getById: publicProcedure
-      .input(z.object({ productId: z.number() }))
-      .query(async ({ input }) => {
-        return db.getProductById(input.productId);
-      }),
-
-    getAll: publicProcedure.query(async () => {
-      return db.getAllProducts({ isActive: true });
-    }),
-
-    search: publicProcedure
-      .input(z.object({ query: z.string() }))
-      .query(async ({ input }) => {
-        return db.searchProducts(input.query);
-      }),
-  }),
-
-  // Order & Payment Management
-  order: orderRouter,
-  payment: paymentRouter,
 });
-
-export type AppRouter = typeof appRouter;
