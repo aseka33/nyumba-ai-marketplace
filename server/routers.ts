@@ -84,7 +84,7 @@ export const appRouter = router({
 
   // Photo Upload & Analysis (Previously Video)
   photo: router({
-        uploadPhoto: publicProcedure // TEMPORARY FIX FOR DEMO
+    uploadPhoto: publicProcedure // Changed to publicProcedure for demo
       .input(
         z.object({
           photoData: z.string(), // Changed from videoData
@@ -97,6 +97,9 @@ export const appRouter = router({
       .mutation(async ({ ctx, input }) => {
         let photoId = 0; // Changed from videoId
         let photoUrl = ""; // Changed from videoUrl
+        
+        // FIX: Use placeholder ID if user is not logged in
+        const userId = ctx.user?.id || 0;
 
         try {
           // Validate file size (max 16MB)
@@ -107,25 +110,25 @@ export const appRouter = router({
             });
           }
 
-                    // Bypass S3 for demo flow
-          const photoKey = `photos/${ctx.user.id}/${Date.now()}-${input.fileName}`;
+          // FIX: Use userId variable
+          const photoKey = `photos/${userId}/${Date.now()}-${input.fileName}`;
+          const photoBuffer = Buffer.from(input.photoData.split(",")[1], "base64");
+
+          // 1. Upload photo to S3 (Bypassed for now)
+          // photoUrl = await storagePut(photoKey, photoBuffer, input.mimeType);
           photoUrl = `https://demo-photo-storage.com/${photoKey}`; // Placeholder URL
-
-          // NOTE: In a real app, you would upload the photo here.
-          // For now, we skip the S3 upload to avoid the missing credentials error.
-
 
           // 2. Create initial photo record in DB
           const photoRecord = await db.createPhoto({
-            userId: ctx.user.id,
+            userId: userId, // FIX: Use userId variable
             photoUrl,
             status: "processing",
             budgetTier: input.budgetTier,
-          });
+          } );
           photoId = photoRecord.id;
 
           // 3. Start AI analysis (non-blocking)
-          analyzeRoomPhoto(photoId, ctx.user.id, photoUrl, input.budgetTier).catch(
+          analyzeRoomPhoto(photoId, userId, photoUrl, input.budgetTier).catch(
             (error) => {
               console.error("AI Analysis failed for photo:", photoId, error);
               db.updatePhotoStatus(photoId, "failed");
