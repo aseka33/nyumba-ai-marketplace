@@ -82,13 +82,13 @@ export type Product = typeof products.$inferSelect;
 export type InsertProduct = typeof products.$inferInsert;
 
 /**
- * Videos uploaded by users for AI analysis
+ * Photos uploaded by users for AI analysis
  */
-export const videos = mysqlTable("videos", {
+export const photos = mysqlTable("photos", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
-  videoUrl: text("videoUrl").notNull(),
-  videoKey: text("videoKey").notNull(),
+  photoUrl: text("photoUrl").notNull(),
+  photoKey: text("photoKey").notNull(),
   thumbnailUrl: text("thumbnailUrl"),
   frameUrl: text("frameUrl"),
   fileSize: int("fileSize"),
@@ -98,15 +98,15 @@ export const videos = mysqlTable("videos", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
-export type Video = typeof videos.$inferSelect;
-export type InsertVideo = typeof videos.$inferInsert;
+export type Photo = typeof photos.$inferSelect;
+export type InsertPhoto = typeof photos.$inferInsert;
 
 /**
- * AI-generated analysis and suggestions for uploaded videos
+ * AI-generated analysis and suggestions for uploaded photos
  */
-export const videoAnalyses = mysqlTable("videoAnalyses", {
+export const photoAnalyses = mysqlTable("photoAnalyses", {
   id: int("id").autoincrement().primaryKey(),
-  videoId: int("videoId").notNull().unique(),
+  photoId: int("photoId").notNull().unique(),
   userId: int("userId").notNull(),
   
   // Room analysis
@@ -136,8 +136,8 @@ export const videoAnalyses = mysqlTable("videoAnalyses", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
-export type VideoAnalysis = typeof videoAnalyses.$inferSelect;
-export type InsertVideoAnalysis = typeof videoAnalyses.$inferInsert;
+export type PhotoAnalysis = typeof photoAnalyses.$inferSelect;
+export type InsertPhotoAnalysis = typeof photoAnalyses.$inferInsert;
 
 /**
  * Orders placed by users
