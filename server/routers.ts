@@ -84,7 +84,7 @@ export const appRouter = router({
 
   // Photo Upload & Analysis (Previously Video)
   photo: router({
-    uploadPhoto: protectedProcedure // Changed from uploadVideo
+        uploadPhoto: publicProcedure // TEMPORARY FIX FOR DEMO
       .input(
         z.object({
           photoData: z.string(), // Changed from videoData
