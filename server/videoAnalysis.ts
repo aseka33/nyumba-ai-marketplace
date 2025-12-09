@@ -1,6 +1,6 @@
 import { invokeLLM } from "./_core/llm";
-import { createVideoAnalysis, updateVideoStatus, getAllProducts } from "./db";
-import type { InsertVideoAnalysis } from "../drizzle/schema";
+import { createPhotoAnalysis, updatePhotoStatus, getAllProducts } from "./db"; // FIX: Renamed imports
+import type { InsertPhotoAnalysis } from "../drizzle/schema"; // FIX: Renamed import
 
 /**
  * Enhanced AI analysis that provides expert recommendations even without vendor products
@@ -14,7 +14,7 @@ export async function analyzeRoomPhoto(photoId: number, userId: number, photoUrl
       throw new Error("Invalid photo ID");
     }
 
-    await updateVideoStatus(photoId, "processing");
+    await updatePhotoStatus(photoId, "processing"); // FIX: Renamed function
 
     const budgetContext = budgetTier
       ? `The user has selected a ${budgetTier} budget tier. Tailor recommendations accordingly with specific price ranges in Kenyan Shillings (KES).`
@@ -136,8 +136,8 @@ Format your response as a JSON object with these fields:
       analysisData.roomType
     );
 
-    const photoAnalysis: InsertVideoAnalysis = {
-      videoId: photoId, // Still using videoId column for simplicity
+    const photoAnalysis: InsertPhotoAnalysis = { // FIX: Renamed type
+      photoId, // FIX: Renamed from videoId
       userId,
       roomType: analysisData.roomType,
       roomSize: analysisData.roomSize,
@@ -151,8 +151,8 @@ Format your response as a JSON object with these fields:
       analysisText: analysisData.analysisText,
     };
 
-    await createVideoAnalysis(photoAnalysis);
-    await updateVideoStatus(photoId, "completed");
+    await createPhotoAnalysis(photoAnalysis); // FIX: Renamed function
+    await updatePhotoStatus(photoId, "completed"); // FIX: Renamed function
 
     return {
       success: true,
@@ -160,7 +160,7 @@ Format your response as a JSON object with these fields:
     };
   } catch (error) {
     console.error("[RoomAnalysis] Error analyzing photo:", error);
-    await updateVideoStatus(photoId, "failed");
+    await updatePhotoStatus(photoId, "failed"); // FIX: Renamed function
     throw error;
   }
 }
