@@ -117,14 +117,17 @@ export const appRouter = router({
           // 1. Upload photo to S3 (Bypassed for now)
           // photoUrl = await storagePut(photoKey, photoBuffer, input.mimeType);
           photoUrl = `https://demo-photo-storage.com/${photoKey}`; // Placeholder URL
+          const thumbnailUrl = `https://demo-photo-storage.com/thumb-${photoKey}`; // FIX: Added thumbnailUrl placeholder
 
           // 2. Create initial photo record in DB
           const photoRecord = await db.createPhoto({
             userId: userId, // FIX: Use userId variable
             photoUrl,
+            photoKey, // FIX: Added photoKey
+            thumbnailUrl, // FIX: Added thumbnailUrl
             status: "processing",
             budgetTier: input.budgetTier,
-          } );
+          }  );
           photoId = photoRecord.id;
 
           // 3. Start AI analysis (non-blocking)
